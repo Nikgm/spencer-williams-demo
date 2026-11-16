@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spencer and Williams</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/instantsearch.css@8.5.1/themes/satellite-min.css"
+    />
+    <link rel="stylesheet" href="styles.css?v=4" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>Spencer and Williams</h1>
+      <div id="searchbox"></div>
+    </header>
+
+    <main class="layout">
+      <aside class="filters">
+        <h2>Brand</h2>
+        <div id="brand-list"></div>
+        <h2>Category</h2>
+        <div id="category-list"></div>
+        <h2>Price</h2>
+        <div id="price-range"></div>
+      </aside>
+
+      <section class="results">
+        <div id="stats"></div>
+        <div id="hits"></div>
+        <div id="pagination"></div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.24.0/dist/algoliasearch-lite.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.75.0"></script>
+    <script>
+      const searchClient = algoliasearch(
+        "FV9UQ11ZLW",
+        "6785928afdf48bea217121afeb356df4"
+      );
+
+      const search = instantsearch({
+        indexName: "products",
+        searchClient,
+      });
+
+      search.addWidgets([
+        instantsearch.widgets.searchBox({
+          container: "#searchbox",
+          placeholder: "Search products",
+        }),
+        instantsearch.widgets.stats({
+          container: "#stats",
+        }),
+        instantsearch.widgets.hits({
+          container: "#hits",
+          templates: {
+            item:
+              '<article class="hit">' +
+              '<img src="{{image}}" alt="">' +
+              "<div>" +
+              "<h2>{{#helpers.highlight}}{ \"attribute\": \"name\" }{{/helpers.highlight}}</h2>" +
+              '<p class="price">${{price}}</p>' +
+              "</div>" +
+              "</article>",
+          },
+        }),
+        instantsearch.widgets.refinementList({
+          container: "#brand-list",
+          attribute: "brand",
+        }),
+        instantsearch.widgets.refinementList({
+          container: "#category-list",
+          attribute: "categories",
+        }),
+        instantsearch.widgets.rangeInput({
+          container: "#price-range",
+          attribute: "price",
+          min: 0,
+          max: 5000,
+          precision: 2,
+          templates: {
+            submitText() {
+              return "Apply";
+            },
+          },
+        }),
+        instantsearch.widgets.pagination({
+          container: "#pagination",
+        }),
+      ]);
+
+      const priceCap = 5000;
+      const priceRange = document.querySelector("#price-range");
+
+      search.on("render", () => {
+        priceRange.querySelectorAll("input").forEach((input) => {
+          input.type = "text";
+          input.inputMode = "decimal";
+        });
+      });
+
+      new MutationObserver(() => {
+        priceRange.querySelectorAll('input[type="number"]').forEach((input) => {
+          input.type = "text";
+          input.inputMode = "decimal";
+        });
+      }).observe(priceRange, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["type"],
+      });
+
+      function cleanPrice(raw) {
+        const cleaned = raw.replace(/[^\d.]/g, "");
+        const dot = cleaned.indexOf(".");
+        let next =
+          dot === -1
+            ? cleaned
+            : cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+        if (next !== "" && next !== "." && Number(next) > priceCap) {
+          next = String(priceCap);
+        }
+        return next;
+      }
+
+      function priceValue(input) {
+        if (input.value === "" || input.value === ".") {
+          return null;
+        }
+        const value = Number(input.value);
+        return Number.isFinite(value) ? value : null;
+      }
+
+      function priceInputs() {
+        return {
+          minInput: priceRange.querySelector(".ais-RangeInput-input--min"),
+          maxInput: priceRange.querySelector(".ais-RangeInput-input--max"),
+        };
+      }
+
+      function lowerMinToMax() {
+        const { minInput, maxInput } = priceInputs();
+        const minValue = priceValue(minInput);
+        const maxValue = priceValue(maxInput);
+        if (minValue === null || maxValue === null || minValue <= maxValue) {
+          return false;
+        }
+        minInput.value = String(maxValue);
+        minInput.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+      }
+
+      priceRange.addEventListener(
+        "input",
+        (event) => {
+          const input = event.target;
+          if (!input.classList.contains("ais-RangeInput-input")) {
+            return;
+          }
+          const { minInput, maxInput } = priceInputs();
+          let next = cleanPrice(input.value);
+          if (input === minInput && next !== "" && next !== ".") {
+            const maxValue = priceValue(maxInput);
+            if (maxValue !== null && Number(next) > maxValue) {
+              next = String(maxValue);
+            }
+          }
+          if (input.value !== next) {
+            input.value = next;
+          }
+        },
+        true
+      );
+
+      priceRange.addEventListener("focusout", (event) => {
+        if (event.target.classList.contains("ais-RangeInput-input--max")) {
+          lowerMinToMax();
+        }
+      });
+
+      priceRange.addEventListener(
+        "submit",
+        (event) => {
+          if (!lowerMinToMax()) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          setTimeout(() => {
+            priceRange.querySelector("form").requestSubmit();
+          }, 0);
+        },
+        true
+      );
+
+      search.start();
+    </script>
+  </body>
+</html>

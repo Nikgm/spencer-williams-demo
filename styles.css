@@ -1,0 +1,114 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: #1a1a1a;
+  background: #f6f7f9;
+}
+
+.header {
+  padding: 24px;
+  background: #003dff;
+  color: #fff;
+}
+
+.header h1 {
+  margin: 0 0 16px;
+  font-size: 28px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.filters,
+.results {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.filters h2 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+.ais-RangeInput-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.ais-RangeInput-separator {
+  display: none;
+}
+
+.ais-RangeInput-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #5c5f6e;
+}
+
+.ais-RangeInput-label:has(.ais-RangeInput-input--min)::before {
+  content: "Min";
+}
+
+.ais-RangeInput-label:has(.ais-RangeInput-input--max)::before {
+  content: "Max";
+}
+
+.ais-RangeInput-input {
+  width: 100%;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.ais-RangeInput-input::-webkit-outer-spin-button,
+.ais-RangeInput-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  display: none;
+}
+
+.ais-RangeInput-submit {
+  grid-column: 1 / -1;
+}
+
+.hit {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.hit img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.hit h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.price {
+  margin: 0;
+  font-weight: bold;
+}
+
+#pagination {
+  margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
